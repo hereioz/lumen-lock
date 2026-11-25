@@ -2,7 +2,7 @@
 
 Turn your PS4 controller's light bar off, or lock it to any colour you like.
 
-Lumen Lock is a small Windows app for DualShock 4 controllers connected over USB. Click once to turn the light bar off, or pick any colour from the colour picker. It keeps re-applying your choice, so games, Steam or replugging the controller can't change it back.
+Lumen Lock is a small Windows app for DualShock 4 controllers, connected by USB or Bluetooth. Click once to turn the light bar off, or pick any colour from the colour picker. It keeps re-applying your choice, so games, Steam or replugging the controller can't change it back.
 
 ## Download
 
@@ -21,7 +21,7 @@ Windows may show **"Windows protected your PC"** because the app isn't code-sign
 ## Requirements
 
 - Windows 10 or 11, 64-bit
-- A DualShock 4 (either version) connected with a USB cable. Bluetooth isn't supported yet.
+- A DualShock 4 (either version), connected by USB cable or Bluetooth
 
 ## Advanced settings
 
@@ -38,7 +38,7 @@ The file is stored at `%AppData%\LumenLock\settings.txt`.
 
 ## How it works
 
-Lumen Lock finds the controller through the Windows HID API and sends it a DualShock 4 USB output report (report `0x05`) that sets only the light bar fields. Rumble is left alone. The controller can't report its current light colour, so Lumen Lock re-sends the colour on a timer instead of watching for changes.
+Lumen Lock finds the controller through the Windows HID API and sends it a DualShock 4 output report that sets only the light bar fields: report `0x05` over USB, or report `0x11` with a CRC-32 checksum over Bluetooth. Rumble is left alone. The controller can't report its current light colour, so Lumen Lock re-sends the colour on a timer instead of watching for changes.
 
 ## Build from source
 

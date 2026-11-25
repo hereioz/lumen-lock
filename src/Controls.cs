@@ -249,10 +249,10 @@ class Hero : Smooth
 		string line = Conn switch
 		{
 			Conn.Usb => "DualShock 4 connected over USB",
-			Conn.Bluetooth => "Bluetooth isn't supported yet, plug in the cable",
-			_ => "Plug in your PS4 controller with a USB cable",
+			Conn.Bluetooth => "DualShock 4 connected over Bluetooth",
+			_ => "Connect your PS4 controller by USB or Bluetooth",
 		};
-		Color dot = Conn switch { Conn.Usb => Theme.Green, Conn.Bluetooth => Theme.Amber, _ => Theme.Sub };
+		Color dot = Conn switch { Conn.Usb => Theme.Green, Conn.Bluetooth => Theme.Green, _ => Theme.Sub };
 		using var lf = new Font(Theme.FontName, 9f);
 		var sz = TextRenderer.MeasureText(line, lf);
 		float total = sz.Width + 14 * s;
