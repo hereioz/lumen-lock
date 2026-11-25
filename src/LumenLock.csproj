@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <NoWarn>WFO1000</NoWarn>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>LumenLock</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <RootNamespace>LumenLock</RootNamespace>
+    <Product>Lumen Lock</Product>
+    <AssemblyTitle>Lumen Lock</AssemblyTitle>
+    <Description>Lumen Lock - light bar control for PS4 controllers</Description>
+    <Version>1.0.0</Version>
+    <Copyright>Copyright © 2026</Copyright>
+  </PropertyGroup>
+</Project>
