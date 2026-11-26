@@ -126,6 +126,102 @@ class Toggle : Smooth
 	}
 }
 
+// Horizontal slider 0-100 with the value shown on the left, in the same style as the toggles.
+class Slider : Smooth
+{
+	int value = 100;
+	bool drag, hover;
+	public event EventHandler Changed;
+
+	public Slider()
+	{
+		Size = new Size(150, 24);
+		Cursor = Cursors.Hand;
+		TabStop = true;
+		AccessibleRole = AccessibleRole.Slider;
+	}
+
+	public int Value
+	{
+		get => value;
+		set
+		{
+			int v = Math.Clamp(value, 0, 100);
+			if (v == this.value) return;
+			this.value = v;
+			AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
+			Invalidate();
+			Changed?.Invoke(this, EventArgs.Empty);
+		}
+	}
+
+	public void Set(int v) { value = Math.Clamp(v, 0, 100); Invalidate(); }
+
+	float TrackX => 44 * DeviceDpi / 96f;
+	float TrackW => Width - TrackX - 8 * DeviceDpi / 96f;
+
+	void FromMouse(int x) => Value = (int)Math.Round((x - TrackX) / TrackW * 100);
+
+	protected override void OnMouseDown(MouseEventArgs e) { Focus(); drag = true; Capture = true; FromMouse(e.X); }
+	protected override void OnMouseMove(MouseEventArgs e) { if (drag) FromMouse(e.X); }
+	protected override void OnMouseUp(MouseEventArgs e) { drag = false; Capture = false; }
+	protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+	protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+	protected override void OnMouseWheel(MouseEventArgs e) { Value += e.Delta > 0 ? 5 : -5; }
+	protected override bool IsInputKey(Keys k) => k is Keys.Left or Keys.Right or Keys.Up or Keys.Down or Keys.Home or Keys.End || base.IsInputKey(k);
+	protected override void OnKeyDown(KeyEventArgs e)
+	{
+		if (e.KeyCode is Keys.Left or Keys.Down) Value -= 5;
+		else if (e.KeyCode is Keys.Right or Keys.Up) Value += 5;
+		else if (e.KeyCode == Keys.Home) Value = 0;
+		else if (e.KeyCode == Keys.End) Value = 100;
+		base.OnKeyDown(e);
+	}
+	protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+	protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+
+	protected override AccessibleObject CreateAccessibilityInstance() => new Acc(this);
+
+	class Acc : ControlAccessibleObject
+	{
+		readonly Slider sl;
+		public Acc(Slider sl) : base(sl) { this.sl = sl; }
+		public override AccessibleRole Role => AccessibleRole.Slider;
+		public override string Value { get => sl.value + "%"; set { } }
+	}
+
+	protected override void OnPaint(PaintEventArgs e)
+	{
+		var g = e.Graphics;
+		Prep(g);
+		g.Clear(BackColor);
+		float s = DeviceDpi / 96f;
+		using (var f = new Font(Theme.FontName, 9.5f, FontStyle.Bold))
+			TextRenderer.DrawText(g, value + "%", f, new Rectangle(0, 0, (int)(40 * s), Height), Theme.Text,
+				TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+
+		float h = 6 * s, y = Height / 2f - h / 2f, x = TrackX, w = TrackW;
+		using (var p = Theme.Round(new RectangleF(x, y, w, h), h / 2))
+		using (var b = new SolidBrush(Theme.Track))
+			g.FillPath(b, p);
+		float fill = w * value / 100f;
+		if (fill > 0)
+		{
+			using var p = Theme.Round(new RectangleF(x, y, Math.Max(fill, h), h), h / 2);
+			using var b = new SolidBrush(Theme.Accent);
+			g.FillPath(b, p);
+		}
+		float d = (hover || drag ? 16 : 14) * s;
+		float kx = x + fill - d / 2, ky = Height / 2f - d / 2;
+		g.FillEllipse(Brushes.White, kx, ky, d, d);
+		if (Focused && ShowFocusCues)
+		{
+			using var pen = new Pen(Theme.Accent, 2 * s);
+			g.DrawEllipse(pen, kx - 2 * s, ky - 2 * s, d + 4 * s, d + 4 * s);
+		}
+	}
+}
+
 class Segmented : Smooth
 {
 	readonly string[] items;
@@ -193,6 +289,8 @@ class Hero : Smooth
 {
 	public bool GuardOn;
 	public Color Light = Color.Black;
+	public bool Rainbow;          // light is cycling; Light is the current hue
+	public int Brightness = 100;  // 0-100, dims the preview like the real LED
 	public Conn Conn;
 	public string Detail = "";
 
@@ -221,6 +319,8 @@ class Hero : Smooth
 		// Scale dim colours up so the preview stays visible, like the real LED.
 		float peak = Math.Max(shown.R, Math.Max(shown.G, shown.B));
 		Color glow = lit ? Color.FromArgb((int)(shown.R * 255 / peak), (int)(shown.G * 255 / peak), (int)(shown.B * 255 / peak)) : Color.Empty;
+		// Brightness dims the preview too, but never below what stays readable on screen.
+		if (lit && GuardOn) glow = Theme.Lerp(Theme.Card, glow, 0.35f + 0.65f * Brightness / 100f);
 		var bar = new RectangleF(Width / 2f - 100 * s, 34 * s, 200 * s, 14 * s);
 		if (lit)
 		{
@@ -241,7 +341,7 @@ class Hero : Smooth
 		}
 
 		string head = Conn == Conn.None ? (GuardOn ? "Waiting for controller" : "No controller")
-			: !GuardOn ? "Not locked" : Hsv.IsOff(Light) ? "Light off" : "#" + Hsv.Hex(Light);
+			: !GuardOn ? "Not locked" : Hsv.IsOff(Light) ? "Light off" : Rainbow ? "Rainbow" : "#" + Hsv.Hex(Light);
 		using (var f = new Font(Theme.FontName, 17f, FontStyle.Bold))
 			TextRenderer.DrawText(g, head, f, new Rectangle(0, (int)(64 * s), Width, (int)(36 * s)), Theme.Text,
 				TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);

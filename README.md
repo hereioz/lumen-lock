@@ -14,6 +14,8 @@ Windows may show **"Windows protected your PC"** because the app isn't code-sign
 
 - **Turn light off / on** with one click. "On" brings back your last colour.
 - **Colour picker** with shade, hue, quick colours and a hex box. A darker colour gives a dimmer light.
+- **Rainbow** fades the light bar smoothly through every colour, a full cycle about every 8 seconds.
+- **Brightness** slider (0–100%) dims a single colour or the rainbow.
 - **Lock light** re-applies your colour every second, so nothing else can change it.
 - **Runs in the tray.** Closing the window keeps it running. Right-click the tray icon to exit.
 - **Start with Windows** (optional). It starts hidden in the tray.
@@ -33,6 +35,8 @@ Right-click the tray icon and choose **Advanced settings file…** The file open
 | `color` | Light bar colour as `RRGGBB` hex. `000000` = off |
 | `lastcolor` | Colour that "Turn light on" restores |
 | `guard` | `1` = keep re-applying, `0` = leave the light alone |
+| `rainbow` | `1` = cycle through every colour, `0` = use `color` |
+| `brightness` | Light bar brightness in percent (0–100, default 100) |
 
 The file is stored at `%AppData%\LumenLock\settings.txt`.
 
